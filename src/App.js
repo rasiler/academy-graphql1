@@ -13,7 +13,7 @@ GraphiQL.Logo = class Logo extends Component {
     };
 
     return (
-      <span style={style}>Learn GraphQL Sandbox</span>
+      <span style={style}>Rangle Academy: GraphQL Sandbox</span>
     );
   }
 }

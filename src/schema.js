@@ -1,8 +1,8 @@
 import * as _ from 'underscore';
 
 import PostsList from './data/posts';
-import AuthorsMap from './data/authors';
-import {CommentList, ReplyList} from './data/comments';
+import UsersMap from './data/users';
+import CommentsList from './data/comments';
 
 import {
   GraphQLList,
@@ -16,6 +16,55 @@ import {
   GraphQLInterfaceType
 } from 'graphql';
 
+
+const GeoCoord = new GraphQLObjectType({
+  name: 'GeoCoord',
+  description: 'The address for a user',
+  fields: () => ({
+    lat: {type: GraphQLString},
+    lng: {type: GraphQLString}
+  })
+});
+
+const Address = new GraphQLObjectType({
+  name: 'Address',
+  description: 'The address for a user',
+  fields: () => ({
+    street: {type: GraphQLString},
+    suite: {type: GraphQLString},
+    city: {type: GraphQLString},
+    zipcode: {type: GraphQLString},
+    geo: {type: GeoCoord},
+  })
+});
+
+const Company = new GraphQLObjectType({
+  name: 'Company',
+  description: 'The company for a user',
+  fields: () => ({
+    name: {type: GraphQLString},
+    catchPhrase: {type: GraphQLString},
+    bs: {type: GraphQLString}
+  })
+});
+
+const User = new GraphQLObjectType({
+  name: 'User',
+  description: 'Respresents an user on the blog site',
+   fields: () => ({
+    id: {type: GraphQLInt},
+    name: {type: GraphQLString},
+    username: {type: GraphQLString},
+    email: {type: GraphQLString},
+    address: {type: Address},
+    phone: {type: GraphQLString},
+    website: {type: GraphQLString},
+    company: {type: Company}
+  })
+});
+
+
+
 const Category = new GraphQLEnumType({
   name: 'Category',
   description: 'A Category of the blog',
@@ -27,21 +76,11 @@ const Category = new GraphQLEnumType({
   }
 });
 
-const Author = new GraphQLObjectType({
-  name: 'Author',
-  description: 'Represent the type of an author of a blog post or a comment',
-  fields: () => ({
-    _id: {type: GraphQLString},
-    name: {type: GraphQLString},
-    twitterHandle: {type: GraphQLString}
-  })
-});
-
 const HasAuthor = new GraphQLInterfaceType({
   name: 'HasAuthor',
   description: 'This type has an author',
   fields: () => ({
-    author: {type: Author}
+    author: {type: User}
   }),
   resolveType: (obj) => {
     if(obj.title) {
@@ -56,25 +95,13 @@ const HasAuthor = new GraphQLInterfaceType({
 
 const Comment = new GraphQLObjectType({
   name: 'Comment',
-  interfaces: [HasAuthor],
-  description: 'Represent the type of a comment',
+  description: 'Represent a comment made about a post',
   fields: () => ({
-    _id: {type: GraphQLString},
-    content: {type: GraphQLString},
-    author: {
-      type: Author,
-      resolve: function({author}) {
-        return AuthorsMap[author];
-      }
-    },
-    timestamp: {type: GraphQLFloat},
-    replies: {
-      type: new GraphQLList(Comment),
-      description: 'Replies for the comment',
-      resolve: function() {
-        return ReplyList;
-      }
-    }
+    id: {type: GraphQLInt},
+    postId: {type: GraphQLInt},
+    name: {type: GraphQLString},
+    email: {type: GraphQLString},
+    body: {type: GraphQLString},
   })
 });
 
@@ -83,16 +110,17 @@ const Post = new GraphQLObjectType({
   interfaces: [HasAuthor],
   description: 'Represent the type of a blog post',
   fields: () => ({
-    _id: {type: GraphQLString},
+    id: {type: GraphQLInt},
+    userId: {type: GraphQLInt},
     title: {type: GraphQLString},
     category: {type: Category},
-    summary: {type: GraphQLString},
-    content: {type: GraphQLString},
+    likeCount: {type: GraphQLInt},
+    body: {type: GraphQLString},
     timestamp: {
       type: GraphQLFloat,
       resolve: function(post) {
         if(post.date) {
-          return new Date(post.date['$date']).getTime();
+          return new Date(post.date.getTime());
         } else {
           return null;
         }
@@ -104,17 +132,18 @@ const Post = new GraphQLObjectType({
         limit: {type: GraphQLInt, description: 'Limit the comments returing'}
       },
       resolve: function(post, {limit}) {
+        let cList = _.filter(CommentsList, (comment) => post.id === comment.postId);
         if(limit >= 0) {
-          return CommentList.slice(0, limit);
+          return cList.slice(0, limit);
         }
 
-        return CommentList;
+        return cList;
       }
     },
     author: {
-      type: Author,
-      resolve: function({author}) {
-        return AuthorsMap[author];
+      type: User,
+      resolve: function(post) {
+        return _.filter(_.values(UsersMap), user => post.userId === user.id)[0];
       }
     }
   })
@@ -138,6 +167,27 @@ const Query = new GraphQLObjectType({
         }
       }
     },
+
+    users: {
+      type: new GraphQLList(User),
+      description: 'List of users of the blog site',
+      resolve: function(source, {username}) {
+          return _.values(UsersMap);
+      }
+    },
+
+
+    user: {
+      type: User,
+      description: 'User by username',
+      args: {
+        username: {type: new GraphQLNonNull(GraphQLString)}
+      },
+      resolve: function(source, {username}) {
+        return UsersMap[username.toLowerCase()];
+      } 
+    },
+
 
     latestPost: {
       type: Post,
@@ -168,39 +218,20 @@ const Query = new GraphQLObjectType({
           return bTime - aTime;
         });
 
-        return PostsList.slice(0, count)
+        return PostsList.slice(0, count);
       }
     },
 
     post: {
       type: Post,
-      description: 'Post by _id',
+      description: 'Post by id',
       args: {
-        _id: {type: new GraphQLNonNull(GraphQLString)}
+        id: {type: new GraphQLNonNull(GraphQLInt)}
       },
-      resolve: function(source, {_id}) {
-        return _.filter(PostsList, post => post._id === _id)[0];
+      resolve: function(source, {id}) {
+        return _.filter(PostsList, post => post.id === id)[0];
       }
     },
-
-    authors: {
-      type: new GraphQLList(Author),
-      description: 'Available authors in the blog',
-      resolve: function() {
-        return _.values(AuthorsMap);
-      }
-    },
-
-    author: {
-      type: Author,
-      description: 'Author by _id',
-      args: {
-        _id: {type: new GraphQLNonNull(GraphQLString)}
-      },
-      resolve: function(source, {_id}) {
-        return AuthorsMap[_id];
-      }
-    }
   })
 });
 
@@ -211,52 +242,47 @@ const Mutation = new GraphQLObjectType({
       type: Post,
       description: 'Create a new blog post',
       args: {
-        _id: {type: new GraphQLNonNull(GraphQLString)},
         title: {type: new GraphQLNonNull(GraphQLString)},
-        content: {type: new GraphQLNonNull(GraphQLString)},
-        summary: {type: GraphQLString},
+        body: {type: new GraphQLNonNull(GraphQLString)},
         category: {type: Category},
-        author: {type: new GraphQLNonNull(GraphQLString), description: 'Id of the author'}
+        author: {type: new GraphQLNonNull(GraphQLString), description: 'username of the author'}
       },
       resolve: function(source, {...args}) {
         let post = args;
-        var alreadyExists = _.findIndex(PostsList, p => p._id === post._id) >= 0;
-        if(alreadyExists) {
-          throw new Error('Post already exists: ' + post._id);
-        }
 
-        if(!AuthorsMap[post.author]) {
+        let user = UsersMap[post.author.toLowerCase()];
+        if(!user) {
           throw new Error('No such author: ' + post.author);
         }
+        
+        post.userId = user.id;
+        post.id = _.size(PostsList) + 1;
+        post.date = new Date();
 
-        if(!post.summary) {
-          post.summary = post.content.substring(0, 100);
-        }
-
-        post.comments = [];
-        post.date = {$date: new Date().toString()}
-
+        console.log(post);
         PostsList.push(post);
         return post;
       }
     },
 
-    createAuthor: {
-      type: Author,
-      description: 'Create a new author',
+    createUser: {
+      type: User,
+      description: 'Create a new user',
       args: {
-        _id: {type: new GraphQLNonNull(GraphQLString)},
+        username: {type: new GraphQLNonNull(GraphQLString)},
         name: {type: new GraphQLNonNull(GraphQLString)},
-        twitterHandle: {type: GraphQLString}
+        email: {type: GraphQLString}
       },
       resolve: function(source, {...args}) {
-        let author = args;
-        if(AuthorsMap[args._id]) {
-          throw new Error('Author already exists: ' + author._id);
+        let user = args;
+       
+        if(UsersMap[user.username.toLowerCase()]) {
+          throw new Error('User already exists: ' + user.username);
         }
-
-        AuthorsMap[author._id] = author;
-        return author;
+        let id = _.size(_.values(UsersMap)) + 1;
+        user.id = id;
+        UsersMap[user.username.toLowerCase()] = user;
+        return user;
       }
     }
   }

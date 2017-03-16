@@ -1,13 +1,642 @@
-const PostsList = [
-  {'_id':'0176413761b289e6d64c2c14a758c1c7','author':'indi', 'category':'meteor','content':'Most developers and companies use two different apps for the marketing website and for the app itself. Thus, they can update each of the apps without affecting the other. [Stripe](https://stripe.com/), [Digital Ocean](https://www.digitalocean.com/) and many other companies follow this technique. Most Meteor apps also do the same.\n\nSo, in a scenario like this, sometimes we need to show the login state of the app on the landing page too. For an example, see our Kadira home page (\u003chttps://kadira.io\u003e). If you are logged into the Kadira app (\u003chttps://ui.kadira.io\u003e), we show a button with "Open Kadira UI" on the home page, which replaces the login button.\n\n[![Login State Example on Kadira](https://cldup.com/q9nKu_OIhQ.png)](https://kadira.io)\n\n## How Did We Do It?\n\nMeteor does not have a built-in way to share login states across multiple apps or subdomains. So, we have to find an alternative way to do so.\n\nAs a solution, we can use browser cookies to share the login state between multiple domains. That\'s exactly what we did. We wrapped this up into a Meteor package, which now you can also use.\n\nIn this guide, I\'m going to explain how to share the login state between multiple domains using the [`kadira:login-state`](https://github.com/kadirahq/meteor-login-state) package.\n\n### On Meteor App\n\nFirst of all, install the `kadira:login-state` package in your Meteor app:\n\n~~~\nmeteor add kadira:login-state\n~~~\n\nThen, you need to add a new entry in the `public` object as the `loginState` in the `settings.json` file for your app. (If you haven\'t created the settings.json yet, you need to create it first.)\n\n~~~json\n{\n  "public": {\n    "loginState": {\n      "domain": ".your-domain-name.com",\n      "cookieName": "app-login-state-cookie-name"\n    }\n  }\n}\n~~~\n\nThe `domain` field must be your main domain name, starting with a dot. It allows you to share the login state, which can be accessed from any of its subdomains. You can use any appropriate identifier, such as `cookieName`.\n\nNow, everything has been set up on the Meteor app.\n\n### On the Static App (the Landing Page)\n\nNow we have to show the login state of the app on the landing page. For this, we need to add support for the login state for the static app (or landing page).\n\nActually, there are three different ways to do this. Here I will show you how to do so by pasting a few lines of JavaScript code.\n\nYou need to create a JavaScript file in your js folder. I create it as `js/login_state.js`. After that, copy and paste the following code snippet into it:\n\n~~~javascript\nLoginState = {};\n\nLoginState.get = function(cookieName) {\n  var loginState = getCookie(cookieName);\n  if(loginState) {\n    return JSON.parse(decodeURIComponent(loginState));\n  } else {\n    return false;\n  }\n};\n\nfunction getCookie(cname) {\n  var name = cname + "=";\n  var ca = document.cookie.split(\';\');\n  for(var i=0; i \u003c ca.length; i++) {\n      var c = ca[i];\n      while (c.charAt(0)==\' \') c = c.substring(1);\n      if (c.indexOf(name) != -1) return c.substring(name.length,c.length);\n  }\n  return;\n}\n~~~\n\nInsert that file into the head section of your HTML document: \n\n`\u003cscript src="js/login-state.js"\u003e\u003c/script\u003e`\n\n\u003e If you prefer, you can also use [Browserify](https://github.com/kadirahq/meteor-login-state#installing-via-browserify) or [Bower](https://github.com/kadirahq/meteor-login-state#installing-via-bower) to load the above JS file.\n\u003e The package name for both Browserify and Bower is `meteor-login-state`.\n\nThen, use the following code to get the login state of your app. You need to provide the relevant `cookieName` to do so: \n\n~~~javascript\nvar loginState = LoginState.get("app-login-state-cookie-name");\nif(loginState) {\n  // the user has loggedIn to the meteor app\n  // see the loginState Object for the addtional data\n  // (append your code here!)\n  console.log(loginState);\n} else {\n  // user has not loggedIn yet.\n  // (append your code here!) \n}\n~~~\n\nThe `loginState` object will be something like this:\n\n~~~json\n{\n  timestamp: 1435835751489,\n  username: "username",\n  userId: "meteor-user-id",\n  email: "user@email.com"\n  url: "https://ui.kadira.io"\n}\n~~~\n\nNow you can do whatever you need to do with the login state.\n\nGive it a try and let me know what you think.','date':{'$date':'2015-07-07T00:00:00.000Z'},'layout':'blog_post','slug':'sharing-meteor-login-state-between-sub-domains','summary':'In this blog we\'ll show you how we shared login state between our static web app and our Meteor app Kadira UI.','title':'Sharing the Meteor Login State Between Subdomains'},
-  {'_id':'03390abb5570ce03ae524397d215713b','author':'pahan', 'category':'product','content':'Here is a common feedback we received from our users:\n\n\u003e Hi, I have a suggestion. It would be great if I could "dismiss" errors or mark them as resolved on my end. This way, I can keep track of which errors I have resolved.\n\nToday we are happy to announce new Kadira feature which allows you to track **status** to errors. With that, you can mark errors as "Ignored", "Fixing" or "Fixed".\n\nOnce you mark an error as "Ignored", it will be hidden. \n\nBut you can click on "Show Ignored Errors" checkbox or filter by "ignored" status to view them again.\n\n![show ignored errors](https://cldup.com/XvoJk9RGWf.gif)\n\nYou can also filter errors by status like this:\n\n![filtering errors with status](https://cldup.com/76JZ6wmbVb.gif)\n\nWe are rolling out this feature to all our paid users. [Give it a try](https://ui.kadira.io/apps/AUTO/errors/overview?metric=count).\n\n### What’s next?\n\nRight now we are planning to add few more feature related this. Could you help us on [prioritizing](https://arunoda.typeform.com/to/hyTwsy) them? Trust me, [it won\'t take a minute](https://arunoda.typeform.com/to/hyTwsy).','date':{'$date':'2015-09-01T00:00:00.000Z'},'slug':'tracking-error-status-on-kadira','summary':'Lot of users asked us to add a feature to set status for errors in the Kadira Error Manager. Now, we\'ve that functionality.','title':'New Feature: Tracking Error Status with Kadira'},
-  {'_id':'0be4bea0330ccb5ecf781a9f69a64bc8','author':'arunoda', 'category':'product','content':'\u003cscript type="text/javascript" src="https://gumroad.com/js/gumroad.js"\u003e\u003c/script\u003e\n\nWe are working on the next few major feature releases for Kadira. We would like to know your preference. Pre-order the feature you would most like to see in the next major release (scheduled for August 1).\n\n## Real Client Monitoring\n\nWith Real Client Monitoring, you can learn how your app behaves in actual clients and find client-side bottlenecks. You\'ll be able to see:\n\n* Load time of your app\n* Time taken to connect to the DDP Server\n* Time taken to load the initial subscriptions\n* Time taken to render initial subscriptions\n* Latency values for your methods and publications. You can also break them down into:\n  * Network latency for sending requests\n  * Server queue time\n  * Server processing time\n  * Network latency for receiving result/data\n\nComparisons with all of these metrics can be made against countries and browsers (mobiles, desktop, etc.).\n\n\u003e This is an add-on for your app and we charge [**$25 for 50K DDP connections per month**](https://gumroad.com/l/LyDy). You can also enable this add-on even if you have a free plan.\n\u003e\n\u003e 1 DDP connection = 1 Reatime client who established a DDP connection\n\n\u003ca href="https://gumroad.com/l/LyDy" class="gumroad-button"\u003ePre Order Now!\u003c/a\u003e\n\n## CPU/Memory Profiling\n\nYou\'ll be able to create CPU and memory profiles for your app in both development and production. This is an add-on for your app.\n\nThe add-on shows:\n\n* CPU-intensive packages in your app\n* CPU-intensive functions and who created them\n* Capture and compare heap dumps and learn how to find memory leaks with them\n\n\u003e You can enable this add-on for a [**$20/month**](https://gumroad.com/l/EqEf) flat free for you app. You can also enable this add-on even if you have a free plan.\n\n\u003ca href="https://gumroad.com/l/EqEf" class="gumroad-button"\u003ePre Order Now!\u003c/a\u003e\n\n## Better Error Manager\n\nCurrently, we track errors for methods only. With Error Manager, you\'ll be able to track all the server-side and client-side errors.\n\nThe improved Error Manager will be available for any app with a [**paid plan**](https://gumroad.com/l/fRGA).\n\n\u003e Client-side errors will be routed through your app. In future, you\'ll be able to send them directly to Kadira without routing them through your app.\n\n\u003ca href="https://gumroad.com/l/fRGA" class="gumroad-button"\u003ePre Order Now!\u003c/a\u003e','date':{'$date':'2014-06-30T00:00:00.000Z'},'layout':'blog_post','slug':'what-should-kadira-build-next','summary':'We are working on the next few major feature releases for Kadira. We would like to know your preference. Pre-order the feature you would most like to see in the next major release (scheduled for August 1).','title':'What Should Kadira Build Next?'},
-  {'_id':'19085291c89f0d04943093c4ff16b664','author':'arunoda', 'category':'product','content':'Everybody hates errors -- whether it\'s in a Meteor app or not. Unfortunately, errors are something we can\'t avoid. So we must track and handle errors even though, we have tested our app a lot.\n\nIn the recent past, technology has been changed rapidly. But, how we track and fix errors hasn\'t changed that much specially for apps running live on production.\n\nTake a look at the following process. It\'s the process we often used to track and fix errors.\n\n* Capture errors via either logs or using some third party web service.\n* Look for error message and stack trace.\n* Try to locate the relevant place in the code.\n* Then try to fix it.\n\nI don\'t think I need to talk more about this because we all follow the same process.\n\n### Client Side Errors\n\nManaging server side errors is pretty easy compared with client side errors. For server errors all we need to focus on our servers. But tracking client side errors is not that simple.\n\nAlso, we can\'t really depend on stack traces because of the minified code. Even though we capture errors, it\'s not easy as server side errors due to the vendor specific issues and constraints. \n\n## Let\'s fix this!\n\nSo, we\'ve decided to find a cure for this and found a way.\n\nWhat we are doing is pretty simple. Along with capturing the error, we also capture the **context** and **events** related to the error. Then you can reproduce them in your development environment and identify and fix any issues quickly.\n\nCheck following error trace which has been captured with Kadira.\n\n![Server Side Meteor Error Trace on Kadira](https://i.cloudup.com/RLwjKSU464.png)\n\nIt contains:\n\n* input parameters for the error;\n* user, who\'s got this error;\n* all the DB, HTTP and other events that have occurred; and\n* the error message and the stack trace.\n\nNow it\'s super-easy to fix the error since you can clearly see what cause the error and it\'s context. We track all kinds of errors including pubsub, method, uncaught exceptions and internal Meteor errors.\n\n### What About Client Side Errors?\n\nWe do the same for client side errors as well. Look at the following error trace.\n\n![Client Side Meteor Error Trace on Kadira](https://cldup.com/-sxdlAvujw.png)\n\nIt has:\n\n* browser information;\n* user information; \n* all the Meteor method calls, subscriptions, sessions and all related events that have occurred;\n* a complete flow of the error starting from the page load event; and\n* the actual error message and stack trace.\n\nNow I think you know what to do with this information.\n\n\u003e we track events using client side zones. So, you need to add [`zones`](https://github.com/meteorhacks/zones) package into your app in addition to [`kadira`](https://github.com/meteorhacks/kadira). Otherwise, you can\'t see events.\n\n## Public Beta\n\nToday, we are happy to announce the public beta of the Kadira\'s Error Tracking solution and invite all of you to start tracking errors with Kadira.\n\nWe\'ve worked so hard on this over the last few months and a lot of people have helped us to test our error tracking solutions—thank you! \n\nSimply update the [`kadira`](https://github.com/meteorhacks/kadira) smart package and visit Errors section on the [Kadira UI](https://ui.kadira.io/).\n\n![Error Tracking with Kadira](https://cldup.com/hBQIhPgzhU.png)\n\n\u003e Error Tracking is free and unrestricted throughout public beta period.\n\nGive it a try and let us know how it goes.','date':{'$date':'2014-09-08T00:00:00.000Z'},'layout':'blog_post','slug':'awesome-error-tracking-solution-for-meteor-apps-with-kadira','summary':'Error tracking is so much important and goes side by side with performance issues. This is the public beta announcement of Kadira\'s error tracking solution.','title':'Awesome Error Tracking Solution for Meteor Apps with Kadira'},
-  {'_id':'1afff9dfb0b97b5882c72cb60844e034','author':'arunoda','category':'product','content':'You might have seen the [EventLoop Utilization](http://support.kadira.io/knowledgebase/articles/372876-event-loop-utilization) chart in our Dashboard. But, it was not correctly working across different hosting platforms. Actually, that value does not reflect any meaning in some situations.\n\n![CPU Usage tracking with Kadira](https://i.cloudup.com/eisfJAuiJW.gif)\n\nSo, we\'ve replaced EventLoop Utilization with [CPU Usage](http://support.kadira.io/knowledgebase/articles/378890-cpu-usage). It\'s the actual percentage of CPU spent on your app. Still, you need to be [careful](http://support.kadira.io/knowledgebase/articles/378890-cpu-usage) with analyzing CPU Usage because, some hosting providers have implemented CPU restrictions. But you can see the correct CPU Usage of your app.\n\n\u003e Please upgrade [kadira](https://atmospherejs.com/package/kadira) smart package in order to track CPU Usage. Apply following code:\n\u003e\n\u003e `mrt update`\n\n## How do we track CPU Usage?\n\nThere is no direct API to track CPU usage of your app within your app. But, we are using [usage](https://github.com/arunoda/node-usage) npm module for that. In Linux and Solaris, it uses the **/proc** filesystem to read the CPU usage. So, it is very efficient.\n\nHave a good time with improving your application.','date':{'$date':'2014-06-12T00:00:00.000Z'},'layout':'blog_post','slug':'tracking-cpu-usage-with-kadira','summary':'We\'ve replaced EventLoop Utilization chart with actual CPU Usage. See why?','title':'Tracking Meteor CPU Usage with Kadira'},
-  {'_id':'1bd16dfab1de982317d2ba4382ec8c86','author':'arunoda','category':'meteor','content':'Today is holiday for Sri Lanka. But for me, it\'s a hackday. I started playing with React and wrote few simple apps. That\'s a nice experience.\n\nSo, I started thinking why not trying to implement SSR support. It\'s worth trying since now we\'ve all the tools we need.\n\n**Guys, It was a successful experience. Now we\'ve pure SSR support for Meteor.**\n\n### How It Works.\n\nLet\'s have a look at first.\n\n* Demo App: \u003chttp://flow-react-ssr.meteor.com/\u003e\n* Demo App Code: \u003chttps://github.com/arunoda/hello-react-meteor\u003e\n\n\u003ciframe width="960" height="720" src="https://www.youtube.com/embed/Qj2eppT27BU?rel=0\u0026amp;showinfo=0" frameborder="0" allowfullscreen="1"\u003e\n\u003c/iframe\u003e\n\nBasically, you just write your Meteor app as you do normally, but using React as the frontend. You use generic Meteor pub/sub to fetch data to the client and render your pages. \n\nHere, you need to use [FlowRouter](https://atmospherejs.com/meteorhacks/flow-router-ssr) and [ReactLayout](https://github.com/arunoda/hello-react-meteor/blob/master/lib/react_layout.js) to render react components. ReactLayout is a pretty simple wrapper around `React.render()` which works both on the server and the client.\n\nIn the server, there is very interesting thing is happening. FlowRouter generate an isolated environment for each route. It use existing subscriptions to fetch data and assign them to collections in that environment. So, you don\'t need to change any of your code for the SSR support. \n\nThen when ReactLayout render components, it gets the data filtered by subscriptions for that route. (You can also use component level subscriptions.) \n\nAfter that ReactLayout handover the generate HTML to FlowRouter. This is designed in a way that we can add other layout engine support as well. So, FlowRrouter still doesn\'t directly works with the layout engine.\n\n### Where we can go\n\nThis is just the base work for SSR and there\'s a lot to be done to build a production ready version. But, now everything is clear and it\'s a matter of time we build and ship it. \n\n\u003e This is the something we are going to release with FlowRouter 3.0. We are very close to release FlowRouter 2.0.\n\nI\'ll talk more about this in the upcoming **Kadira Show** and if you like to work on this, just drop me a message.','date':{'$date':'2015-07-01T00:00:00.000Z'},'layout':'blog_post','slug':'meteor-ssr-support-using-flow-router-and-react','summary':'This is an experiment arunoda did to implement Server Side Renderng(SSR) using Flow Router and React.','title':'Meteor Server Side Rendering Support with FlowRouter and React'},
-  {'_id':'285292901bb38be8f57dd2885c517826','author':'arunoda','category':'user-story','content':'[Brent Abrahams](http://cn.linkedin.com/pub/brent-abrahams/87/372/ba1) is a mathematics teacher who has build an online curriculum management app [Standbench](http://cn.linkedin.com/pub/brent-abrahams/87/372/ba1) for his organization using Meteor. He has a [nice story](http://meteorhacks.com/meteor-in-production-a-case-study.html) with the initial stage of his applications and how he used Oplog with his application.\n\nRecently, we was able to figure out a potential issue of one of his server with the data from Kadira. This is how he talked about it.\n\n"Kadira did give me a heads-up a couple of days ago that one of my servers was in trouble, as I saw an unusual increase in the number of publications and methods being called.  So I restarted the server and watched everything settle back into the normal pattern.  That was nice!  The real-time aspect of the Kadira admin console is just great."\n\nBrent also showed how he used Kadira with his development workflow.\n\n\u003ciframe width="640" height="480" src="//www.youtube.com/embed/MUTn6hdfV64" frameborder="0" allowfullscreen="1"\u003e\n\u003c/iframe\u003e','date':{'$date':'2014-05-27T00:00:00.000Z'},'layout':'blog_post','slug':'user-stories-brent-abrahams','summary':'Denis has been using Kadira from the initial beta release and helped us a lot on identifying issues with Kadira. This is how he is using Kadira.','title':'How Brent is using Kadira with his development workflow'},
-  {'_id':'2f6b59fd0b182dc6e2f0051696c70d70','author':'arunoda','category':'other','content':'This is a short guide to remind you about means, histograms and percentiles in statistics. Then, we will discuss why all these matter and when we can use each of them.\n\n## Our Data Set\n\nFirst, we need a data set so we can calculate these measurements. We will look at a collection of response times collected over a minute from a web app. Here are those values (they are in milliseconds):\n\n~~~\n255, 168, 125, 11102, 59, 120, 500, 2, 98, 25\n~~~\n\nBy just looking at the data set, it\'s hard to get a clear picture. \nIt would be impossible, if we had a larger data set. (Normally, we\'ll have larger data sets.)\n\n\u003e You can access these values in a [Google Sheet](https://docs.google.com/spreadsheets/d/1JsDB2ryWKBcSLRy-YHIjfIs-ESFZq2k3N7ggdVz5O84/edit?usp=sharing), which also has each of the measurements we are looking at in this article.\n\n## Analyzing the Data Set\n\nNow we need to analyze this data set and get some information from it. That\'s why we need to build some measurements.\n\n## Mean\n\nMean is the easiest measurement to generate. Simply add all the numbers together and divide by the number of items.\n\nFor this data set, the mean is **1245.4 milliseconds.**\n\nThat is, on average it took more than 1245 milliseconds to process a single request.\n\n\u003e The mean is a good measurement for representing a whole data set as a single value.\n\n## Histograms\n\nSometimes mean **does not** represent a data set accurately. For our data set, we got a mean of 1245 milliseconds. But, just by looking at the data set, we know a lot of requests took less than 200 milliseconds. So, the mean is not a good representation for our data set.\n\nMean has a higher value because it\'s sensitive to **outliers** like 11,102 milliseconds.\n\nSo, a histogram is the answer. It gives us a better view of the data set.\n\nHere\'s the histogram for our data set:\n\n![](https://cldup.com/CLt8N20YIH.png)\n\nIn the histogram, we group data points into equal groups. We call such a group a bin. The size of our bins (binSize) is 1000 milliseconds.\n\nIt\'s clear that we\'ve an outlier. We can get even more information if we make our bin size smaller.\n\n\u003e A histogram is a good tool for visualizing a data set. We can see what really happened.\n\n### Summarizing\n\nHistograms are always useful for visualizing a data set. But, we can\'t measure two different histograms and compare them easily. That\'s why we need to generate summary measurements from a histogram (or from the data set directly). \n\nLet\'s have a look at a few such measurements.\n\n#### Median\n\nMedian is the value in middle of the data set. We can simply get it by sorting the data set and picking the value in the middle. In our data set, it\'s **122.5 milliseconds.**\n\nWhat does the median represent? For 50% of the events, our response time was shorter than 125.5 milliseconds.\n\n\u003e So, the median gives us useful information about our data set and it\'s not sensitive to outliers.\n\n#### Percentiles\n\nTo calculate a percentile, we need to sort our data set and divide it into 100 equal groups. So, the 90th percentile is the value at beginning of the 90th group.\n\nIn our case, the 90th percentile is **1560.2 milliseconds.**\n\nThis means that more than 10% of our user base experienced a response time of 1560 milliseconds or higher. Alternatively, 90% of our users had a response time less than 1560 milliseconds.\n\n\u003e Median is equivalent to the 50th percentile. Percentiles are not sensitive to outliers.\n\n## Using All These Measurements\n\nWe can\'t say that one measurement is good or bad. Each of them has its own purpose. Let\'s discuss this. \n\n\u003e We will use the *response time* as an example metric, but our comments hold for any kind of metric. \n\n**Mean is a good measurement if we need to compare response times in different periods.**\n\nFor example, we can plot means for each minute as a graph to see how it behaves. Since it\'s sensitive to outliers, we **can** see them as well. Have a look at the following graph:\n\n![](https://cldup.com/hDcS9KuQb5.png)\n\nThere\'s a spike at the end of this chart. So, we can tell that there was something wrong then. We can now drill down into the data set at that time and find the problem.\n\n**That\'s when histograms and summary measurements come in handy.**\n\nLet\'s have a look at the histogram of our data set at that time:\n\n![](https://cldup.com/QM0ghRvB-a.png)\n\nHere, the 99th percentile is very high compared with the other percentiles, which indicates that there is an outlier.\n\nBut interestingly, our 90th and 95th percentiles are also quite high. So, that seems like a problem.\n\n\u003e Normally, we try to reduce response times. That\'s why we never look at lower percentile values like the 5th percentile. But, depending on your data set, you can pick any percentile you want.\n\nFor the response time, we usually look at the median, the 90th, 95th and 99th percentiles. It\'s up to you to decide which percentile you are going to look at. \n\nIf the response time is very critical to your app, you can try to reduce the 99th percentile. Otherwise, you could try to optimize the response time for the 90th or 95th percentile.\n\nIf you are really not worried about the response time, you could try to optimize the median.','date':{'$date':'2015-08-24T00:00:00.000Z'},'layout':'blog_post','slug':'mean-histogram-and-percentiles','summary':'A short guide to means, histograms and percentiles and how we can use them in a real situation.','title':'Understanding Mean, Histogram and Percentiles'},
-  {'_id':'3d7a3853bf435c0f00e46e15257a94d9','author':'arunoda','category':'product','content':'Today, I\'m very excited to be launching Kadira Debug version 2. This version comes with a lot of UI improvements and few CPU related functionalities.\n\n## Installation\n\nThis version of Kadira Debug is published as a new package: `kadira:debug`. So, you need to remove `meteorhacks:kadira-debug` if it\'s in your app:\n\n~~~\nmeteor remove meteorhacks:kadira-debug\nmeteor add kadira:debug\n~~~\n\nAfter you\'ve added `kadira:debug`, simply visit \u003chttp://debug.kadiraio.com/debug\u003e and you\'ll be able to see what\'s going on in your app.\n\nLet me show you couple of new features and enhancements that we\'ve added.\n\n### CPU Usage Monitoring\n\nThese days we do many things on the client side, which means there is a lot of CPU activities on the client side of your app. Sometimes, your app will become slower to use because of these activities.\n\nNow, we\'ve a real-time CPU usage monitor based on [EventLoop usage](https://kadira.io/platform/kadira-debug/cpu-monitoring):\n\n[![CPU Usage Monitoring](https://cldup.com/CVKvhaFDhA.png)](https://kadira.io/platform/kadira-debug/cpu-monitoring)\n\n### Improved Event Stream\n\nIn the previous version, the event stream was very hard to use if there was a lot of data in it. Now the event stream will pause if you click on it. Also, now you\'ll be able to filter the event stream for the data you actually need:\n\n\u003ca href="https://kadira.io/platform/kadira-debug/event-stream"\u003e\n    \u003cimg \n        src="https://cldup.com/i7bxh6m2WL.jpg" \n        alt="Improved Event Stream" \n        data-gif="https://cldup.com/aQC6-NFYNK.gif"/\u003e\n\u003c/a\u003e\n\n### CPU Profiling\n\nNow you can analyze both client and server CPU profiles using our CPU analyzer. Earlier it was only available inside our Kadira app and it was a bit hard to use. Now anyone can use it.\n\n[![Kadira CPU Analyzer](https://cldup.com/JNPqRdYhrv.png)](https://kadira.io/platform/kadira-debug/cpu-profiling)\n\n### Lots of UI Improvements\n\nBesides these major changes, we\'ve added many UI improvements, making Kadira Debug very productive to use. \n\nTry the new [Kadira Debug](http://debug.kadiraio.com/debug) and let us know what you think about it.','date':{'$date':'2015-07-20T00:00:00.000Z'},'layout':'blog_post','slug':'introducing-kadira-debug-v2','summary':'Today, we are introducing a new version of Kadira Debug. It comes with many UI improvements and support for CPU profiling.','title':'Introducing Kadira Debug, Version 2'},
+const RawList = [
+  {
+    'userId': 1,
+    'id': 1,
+    'title': 'sunt aut facere repellat provident occaecati excepturi optio reprehenderit',
+    'body': 'quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto'
+  },
+  {
+    'userId': 1,
+    'id': 2,
+    'title': 'qui est esse',
+    'body': 'est rerum tempore vitae\nsequi sint nihil reprehenderit dolor beatae ea dolores neque\nfugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis\nqui aperiam non debitis possimus qui neque nisi nulla'
+  },
+  {
+    'userId': 1,
+    'id': 3,
+    'title': 'ea molestias quasi exercitationem repellat qui ipsa sit aut',
+    'body': 'et iusto sed quo iure\nvoluptatem occaecati omnis eligendi aut ad\nvoluptatem doloribus vel accusantium quis pariatur\nmolestiae porro eius odio et labore et velit aut'
+  },
+  {
+    'userId': 1,
+    'id': 4,
+    'title': 'eum et est occaecati',
+    'body': 'ullam et saepe reiciendis voluptatem adipisci\nsit amet autem assumenda provident rerum culpa\nquis hic commodi nesciunt rem tenetur doloremque ipsam iure\nquis sunt voluptatem rerum illo velit'
+  },
+  {
+    'userId': 1,
+    'id': 5,
+    'title': 'nesciunt quas odio',
+    'body': 'repudiandae veniam quaerat sunt sed\nalias aut fugiat sit autem sed est\nvoluptatem omnis possimus esse voluptatibus quis\nest aut tenetur dolor neque'
+  },
+  {
+    'userId': 1,
+    'id': 6,
+    'title': 'dolorem eum magni eos aperiam quia',
+    'body': 'ut aspernatur corporis harum nihil quis provident sequi\nmollitia nobis aliquid molestiae\nperspiciatis et ea nemo ab reprehenderit accusantium quas\nvoluptate dolores velit et doloremque molestiae'
+  },
+  {
+    'userId': 1,
+    'id': 7,
+    'title': 'magnam facilis autem',
+    'body': 'dolore placeat quibusdam ea quo vitae\nmagni quis enim qui quis quo nemo aut saepe\nquidem repellat excepturi ut quia\nsunt ut sequi eos ea sed quas'
+  },
+  {
+    'userId': 1,
+    'id': 8,
+    'title': 'dolorem dolore est ipsam',
+    'body': 'dignissimos aperiam dolorem qui eum\nfacilis quibusdam animi sint suscipit qui sint possimus cum\nquaerat magni maiores excepturi\nipsam ut commodi dolor voluptatum modi aut vitae'
+  },
+  {
+    'userId': 1,
+    'id': 9,
+    'title': 'nesciunt iure omnis dolorem tempora et accusantium',
+    'body': 'consectetur animi nesciunt iure dolore\nenim quia ad\nveniam autem ut quam aut nobis\net est aut quod aut provident voluptas autem voluptas'
+  },
+  {
+    'userId': 1,
+    'id': 10,
+    'title': 'optio molestias id quia eum',
+    'body': 'quo et expedita modi cum officia vel magni\ndoloribus qui repudiandae\nvero nisi sit\nquos veniam quod sed accusamus veritatis error'
+  },
+  {
+    'userId': 2,
+    'id': 11,
+    'title': 'et ea vero quia laudantium autem',
+    'body': 'delectus reiciendis molestiae occaecati non minima eveniet qui voluptatibus\naccusamus in eum beatae sit\nvel qui neque voluptates ut commodi qui incidunt\nut animi commodi'
+  },
+  {
+    'userId': 2,
+    'id': 12,
+    'title': 'in quibusdam tempore odit est dolorem',
+    'body': 'itaque id aut magnam\npraesentium quia et ea odit et ea voluptas et\nsapiente quia nihil amet occaecati quia id voluptatem\nincidunt ea est distinctio odio'
+  },
+  {
+    'userId': 2,
+    'id': 13,
+    'title': 'dolorum ut in voluptas mollitia et saepe quo animi',
+    'body': 'aut dicta possimus sint mollitia voluptas commodi quo doloremque\niste corrupti reiciendis voluptatem eius rerum\nsit cumque quod eligendi laborum minima\nperferendis recusandae assumenda consectetur porro architecto ipsum ipsam'
+  },
+  {
+    'userId': 2,
+    'id': 14,
+    'title': 'voluptatem eligendi optio',
+    'body': 'fuga et accusamus dolorum perferendis illo voluptas\nnon doloremque neque facere\nad qui dolorum molestiae beatae\nsed aut voluptas totam sit illum'
+  },
+  {
+    'userId': 2,
+    'id': 15,
+    'title': 'eveniet quod temporibus',
+    'body': 'reprehenderit quos placeat\nvelit minima officia dolores impedit repudiandae molestiae nam\nvoluptas recusandae quis delectus\nofficiis harum fugiat vitae'
+  },
+  {
+    'userId': 2,
+    'id': 16,
+    'title': 'sint suscipit perspiciatis velit dolorum rerum ipsa laboriosam odio',
+    'body': 'suscipit nam nisi quo aperiam aut\nasperiores eos fugit maiores voluptatibus quia\nvoluptatem quis ullam qui in alias quia est\nconsequatur magni mollitia accusamus ea nisi voluptate dicta'
+  },
+  {
+    'userId': 2,
+    'id': 17,
+    'title': 'fugit voluptas sed molestias voluptatem provident',
+    'body': 'eos voluptas et aut odit natus earum\naspernatur fuga molestiae ullam\ndeserunt ratione qui eos\nqui nihil ratione nemo velit ut aut id quo'
+  },
+  {
+    'userId': 2,
+    'id': 18,
+    'title': 'voluptate et itaque vero tempora molestiae',
+    'body': 'eveniet quo quis\nlaborum totam consequatur non dolor\nut et est repudiandae\nest voluptatem vel debitis et magnam'
+  },
+  {
+    'userId': 2,
+    'id': 19,
+    'title': 'adipisci placeat illum aut reiciendis qui',
+    'body': 'illum quis cupiditate provident sit magnam\nea sed aut omnis\nveniam maiores ullam consequatur atque\nadipisci quo iste expedita sit quos voluptas'
+  },
+  {
+    'userId': 2,
+    'id': 20,
+    'title': 'doloribus ad provident suscipit at',
+    'body': 'qui consequuntur ducimus possimus quisquam amet similique\nsuscipit porro ipsam amet\neos veritatis officiis exercitationem vel fugit aut necessitatibus totam\nomnis rerum consequatur expedita quidem cumque explicabo'
+  },
+  {
+    'userId': 3,
+    'id': 21,
+    'title': 'asperiores ea ipsam voluptatibus modi minima quia sint',
+    'body': 'repellat aliquid praesentium dolorem quo\nsed totam minus non itaque\nnihil labore molestiae sunt dolor eveniet hic recusandae veniam\ntempora et tenetur expedita sunt'
+  },
+  {
+    'userId': 3,
+    'id': 22,
+    'title': 'dolor sint quo a velit explicabo quia nam',
+    'body': 'eos qui et ipsum ipsam suscipit aut\nsed omnis non odio\nexpedita earum mollitia molestiae aut atque rem suscipit\nnam impedit esse'
+  },
+  {
+    'userId': 3,
+    'id': 23,
+    'title': 'maxime id vitae nihil numquam',
+    'body': 'veritatis unde neque eligendi\nquae quod architecto quo neque vitae\nest illo sit tempora doloremque fugit quod\net et vel beatae sequi ullam sed tenetur perspiciatis'
+  },
+  {
+    'userId': 3,
+    'id': 24,
+    'title': 'autem hic labore sunt dolores incidunt',
+    'body': 'enim et ex nulla\nomnis voluptas quia qui\nvoluptatem consequatur numquam aliquam sunt\ntotam recusandae id dignissimos aut sed asperiores deserunt'
+  },
+  {
+    'userId': 3,
+    'id': 25,
+    'title': 'rem alias distinctio quo quis',
+    'body': 'ullam consequatur ut\nomnis quis sit vel consequuntur\nipsa eligendi ipsum molestiae et omnis error nostrum\nmolestiae illo tempore quia et distinctio'
+  },
+  {
+    'userId': 3,
+    'id': 26,
+    'title': 'est et quae odit qui non',
+    'body': 'similique esse doloribus nihil accusamus\nomnis dolorem fuga consequuntur reprehenderit fugit recusandae temporibus\nperspiciatis cum ut laudantium\nomnis aut molestiae vel vero'
+  },
+  {
+    'userId': 3,
+    'id': 27,
+    'title': 'quasi id et eos tenetur aut quo autem',
+    'body': 'eum sed dolores ipsam sint possimus debitis occaecati\ndebitis qui qui et\nut placeat enim earum aut odit facilis\nconsequatur suscipit necessitatibus rerum sed inventore temporibus consequatur'
+  },
+  {
+    'userId': 3,
+    'id': 28,
+    'title': 'delectus ullam et corporis nulla voluptas sequi',
+    'body': 'non et quaerat ex quae ad maiores\nmaiores recusandae totam aut blanditiis mollitia quas illo\nut voluptatibus voluptatem\nsimilique nostrum eum'
+  },
+  {
+    'userId': 3,
+    'id': 29,
+    'title': 'iusto eius quod necessitatibus culpa ea',
+    'body': 'odit magnam ut saepe sed non qui\ntempora atque nihil\naccusamus illum doloribus illo dolor\neligendi repudiandae odit magni similique sed cum maiores'
+  },
+  {
+    'userId': 3,
+    'id': 30,
+    'title': 'a quo magni similique perferendis',
+    'body': 'alias dolor cumque\nimpedit blanditiis non eveniet odio maxime\nblanditiis amet eius quis tempora quia autem rem\na provident perspiciatis quia'
+  },
+  {
+    'userId': 4,
+    'id': 31,
+    'title': 'ullam ut quidem id aut vel consequuntur',
+    'body': 'debitis eius sed quibusdam non quis consectetur vitae\nimpedit ut qui consequatur sed aut in\nquidem sit nostrum et maiores adipisci atque\nquaerat voluptatem adipisci repudiandae'
+  },
+  {
+    'userId': 4,
+    'id': 32,
+    'title': 'doloremque illum aliquid sunt',
+    'body': 'deserunt eos nobis asperiores et hic\nest debitis repellat molestiae optio\nnihil ratione ut eos beatae quibusdam distinctio maiores\nearum voluptates et aut adipisci ea maiores voluptas maxime'
+  },
+  {
+    'userId': 4,
+    'id': 33,
+    'title': 'qui explicabo molestiae dolorem',
+    'body': 'rerum ut et numquam laborum odit est sit\nid qui sint in\nquasi tenetur tempore aperiam et quaerat qui in\nrerum officiis sequi cumque quod'
+  },
+  {
+    'userId': 4,
+    'id': 34,
+    'title': 'magnam ut rerum iure',
+    'body': 'ea velit perferendis earum ut voluptatem voluptate itaque iusto\ntotam pariatur in\nnemo voluptatem voluptatem autem magni tempora minima in\nest distinctio qui assumenda accusamus dignissimos officia nesciunt nobis'
+  },
+  {
+    'userId': 4,
+    'id': 35,
+    'title': 'id nihil consequatur molestias animi provident',
+    'body': 'nisi error delectus possimus ut eligendi vitae\nplaceat eos harum cupiditate facilis reprehenderit voluptatem beatae\nmodi ducimus quo illum voluptas eligendi\net nobis quia fugit'
+  },
+  {
+    'userId': 4,
+    'id': 36,
+    'title': 'fuga nam accusamus voluptas reiciendis itaque',
+    'body': 'ad mollitia et omnis minus architecto odit\nvoluptas doloremque maxime aut non ipsa qui alias veniam\nblanditiis culpa aut quia nihil cumque facere et occaecati\nqui aspernatur quia eaque ut aperiam inventore'
+  },
+  {
+    'userId': 4,
+    'id': 37,
+    'title': 'provident vel ut sit ratione est',
+    'body': 'debitis et eaque non officia sed nesciunt pariatur vel\nvoluptatem iste vero et ea\nnumquam aut expedita ipsum nulla in\nvoluptates omnis consequatur aut enim officiis in quam qui'
+  },
+  {
+    'userId': 4,
+    'id': 38,
+    'title': 'explicabo et eos deleniti nostrum ab id repellendus',
+    'body': 'animi esse sit aut sit nesciunt assumenda eum voluptas\nquia voluptatibus provident quia necessitatibus ea\nrerum repudiandae quia voluptatem delectus fugit aut id quia\nratione optio eos iusto veniam iure'
+  },
+  {
+    'userId': 4,
+    'id': 39,
+    'title': 'eos dolorem iste accusantium est eaque quam',
+    'body': 'corporis rerum ducimus vel eum accusantium\nmaxime aspernatur a porro possimus iste omnis\nest in deleniti asperiores fuga aut\nvoluptas sapiente vel dolore minus voluptatem incidunt ex'
+  },
+  {
+    'userId': 4,
+    'id': 40,
+    'title': 'enim quo cumque',
+    'body': 'ut voluptatum aliquid illo tenetur nemo sequi quo facilis\nipsum rem optio mollitia quas\nvoluptatem eum voluptas qui\nunde omnis voluptatem iure quasi maxime voluptas nam'
+  },
+  {
+    'userId': 5,
+    'id': 41,
+    'title': 'non est facere',
+    'body': 'molestias id nostrum\nexcepturi molestiae dolore omnis repellendus quaerat saepe\nconsectetur iste quaerat tenetur asperiores accusamus ex ut\nnam quidem est ducimus sunt debitis saepe'
+  },
+  {
+    'userId': 5,
+    'id': 42,
+    'title': 'commodi ullam sint et excepturi error explicabo praesentium voluptas',
+    'body': 'odio fugit voluptatum ducimus earum autem est incidunt voluptatem\nodit reiciendis aliquam sunt sequi nulla dolorem\nnon facere repellendus voluptates quia\nratione harum vitae ut'
+  },
+  {
+    'userId': 5,
+    'id': 43,
+    'title': 'eligendi iste nostrum consequuntur adipisci praesentium sit beatae perferendis',
+    'body': 'similique fugit est\nillum et dolorum harum et voluptate eaque quidem\nexercitationem quos nam commodi possimus cum odio nihil nulla\ndolorum exercitationem magnam ex et a et distinctio debitis'
+  },
+  {
+    'userId': 5,
+    'id': 44,
+    'title': 'optio dolor molestias sit',
+    'body': 'temporibus est consectetur dolore\net libero debitis vel velit laboriosam quia\nipsum quibusdam qui itaque fuga rem aut\nea et iure quam sed maxime ut distinctio quae'
+  },
+  {
+    'userId': 5,
+    'id': 45,
+    'title': 'ut numquam possimus omnis eius suscipit laudantium iure',
+    'body': 'est natus reiciendis nihil possimus aut provident\nex et dolor\nrepellat pariatur est\nnobis rerum repellendus dolorem autem'
+  },
+  {
+    'userId': 5,
+    'id': 46,
+    'title': 'aut quo modi neque nostrum ducimus',
+    'body': 'voluptatem quisquam iste\nvoluptatibus natus officiis facilis dolorem\nquis quas ipsam\nvel et voluptatum in aliquid'
+  },
+  {
+    'userId': 5,
+    'id': 47,
+    'title': 'quibusdam cumque rem aut deserunt',
+    'body': 'voluptatem assumenda ut qui ut cupiditate aut impedit veniam\noccaecati nemo illum voluptatem laudantium\nmolestiae beatae rerum ea iure soluta nostrum\neligendi et voluptate'
+  },
+  {
+    'userId': 5,
+    'id': 48,
+    'title': 'ut voluptatem illum ea doloribus itaque eos',
+    'body': 'voluptates quo voluptatem facilis iure occaecati\nvel assumenda rerum officia et\nillum perspiciatis ab deleniti\nlaudantium repellat ad ut et autem reprehenderit'
+  },
+  {
+    'userId': 5,
+    'id': 49,
+    'title': 'laborum non sunt aut ut assumenda perspiciatis voluptas',
+    'body': 'inventore ab sint\nnatus fugit id nulla sequi architecto nihil quaerat\neos tenetur in in eum veritatis non\nquibusdam officiis aspernatur cumque aut commodi aut'
+  },
+  {
+    'userId': 5,
+    'id': 50,
+    'title': 'repellendus qui recusandae incidunt voluptates tenetur qui omnis exercitationem',
+    'body': 'error suscipit maxime adipisci consequuntur recusandae\nvoluptas eligendi et est et voluptates\nquia distinctio ab amet quaerat molestiae et vitae\nadipisci impedit sequi nesciunt quis consectetur'
+  },
+  {
+    'userId': 6,
+    'id': 51,
+    'title': 'soluta aliquam aperiam consequatur illo quis voluptas',
+    'body': 'sunt dolores aut doloribus\ndolore doloribus voluptates tempora et\ndoloremque et quo\ncum asperiores sit consectetur dolorem'
+  },
+  {
+    'userId': 6,
+    'id': 52,
+    'title': 'qui enim et consequuntur quia animi quis voluptate quibusdam',
+    'body': 'iusto est quibusdam fuga quas quaerat molestias\na enim ut sit accusamus enim\ntemporibus iusto accusantium provident architecto\nsoluta esse reprehenderit qui laborum'
+  },
+  {
+    'userId': 6,
+    'id': 53,
+    'title': 'ut quo aut ducimus alias',
+    'body': 'minima harum praesentium eum rerum illo dolore\nquasi exercitationem rerum nam\nporro quis neque quo\nconsequatur minus dolor quidem veritatis sunt non explicabo similique'
+  },
+  {
+    'userId': 6,
+    'id': 54,
+    'title': 'sit asperiores ipsam eveniet odio non quia',
+    'body': 'totam corporis dignissimos\nvitae dolorem ut occaecati accusamus\nex velit deserunt\net exercitationem vero incidunt corrupti mollitia'
+  },
+  {
+    'userId': 6,
+    'id': 55,
+    'title': 'sit vel voluptatem et non libero',
+    'body': 'debitis excepturi ea perferendis harum libero optio\neos accusamus cum fuga ut sapiente repudiandae\net ut incidunt omnis molestiae\nnihil ut eum odit'
+  },
+  {
+    'userId': 6,
+    'id': 56,
+    'title': 'qui et at rerum necessitatibus',
+    'body': 'aut est omnis dolores\nneque rerum quod ea rerum velit pariatur beatae excepturi\net provident voluptas corrupti\ncorporis harum reprehenderit dolores eligendi'
+  },
+  {
+    'userId': 6,
+    'id': 57,
+    'title': 'sed ab est est',
+    'body': 'at pariatur consequuntur earum quidem\nquo est laudantium soluta voluptatem\nqui ullam et est\net cum voluptas voluptatum repellat est'
+  },
+  {
+    'userId': 6,
+    'id': 58,
+    'title': 'voluptatum itaque dolores nisi et quasi',
+    'body': 'veniam voluptatum quae adipisci id\net id quia eos ad et dolorem\naliquam quo nisi sunt eos impedit error\nad similique veniam'
+  },
+  {
+    'userId': 6,
+    'id': 59,
+    'title': 'qui commodi dolor at maiores et quis id accusantium',
+    'body': 'perspiciatis et quam ea autem temporibus non voluptatibus qui\nbeatae a earum officia nesciunt dolores suscipit voluptas et\nanimi doloribus cum rerum quas et magni\net hic ut ut commodi expedita sunt'
+  },
+  {
+    'userId': 6,
+    'id': 60,
+    'title': 'consequatur placeat omnis quisquam quia reprehenderit fugit veritatis facere',
+    'body': 'asperiores sunt ab assumenda cumque modi velit\nqui esse omnis\nvoluptate et fuga perferendis voluptas\nillo ratione amet aut et omnis'
+  },
+  {
+    'userId': 7,
+    'id': 61,
+    'title': 'voluptatem doloribus consectetur est ut ducimus',
+    'body': 'ab nemo optio odio\ndelectus tenetur corporis similique nobis repellendus rerum omnis facilis\nvero blanditiis debitis in nesciunt doloribus dicta dolores\nmagnam minus velit'
+  },
+  {
+    'userId': 7,
+    'id': 62,
+    'title': 'beatae enim quia vel',
+    'body': 'enim aspernatur illo distinctio quae praesentium\nbeatae alias amet delectus qui voluptate distinctio\nodit sint accusantium autem omnis\nquo molestiae omnis ea eveniet optio'
+  },
+  {
+    'userId': 7,
+    'id': 63,
+    'title': 'voluptas blanditiis repellendus animi ducimus error sapiente et suscipit',
+    'body': 'enim adipisci aspernatur nemo\nnumquam omnis facere dolorem dolor ex quis temporibus incidunt\nab delectus culpa quo reprehenderit blanditiis asperiores\naccusantium ut quam in voluptatibus voluptas ipsam dicta'
+  },
+  {
+    'userId': 7,
+    'id': 64,
+    'title': 'et fugit quas eum in in aperiam quod',
+    'body': 'id velit blanditiis\neum ea voluptatem\nmolestiae sint occaecati est eos perspiciatis\nincidunt a error provident eaque aut aut qui'
+  },
+  {
+    'userId': 7,
+    'id': 65,
+    'title': 'consequatur id enim sunt et et',
+    'body': 'voluptatibus ex esse\nsint explicabo est aliquid cumque adipisci fuga repellat labore\nmolestiae corrupti ex saepe at asperiores et perferendis\nnatus id esse incidunt pariatur'
+  },
+  {
+    'userId': 7,
+    'id': 66,
+    'title': 'repudiandae ea animi iusto',
+    'body': 'officia veritatis tenetur vero qui itaque\nsint non ratione\nsed et ut asperiores iusto eos molestiae nostrum\nveritatis quibusdam et nemo iusto saepe'
+  },
+  {
+    'userId': 7,
+    'id': 67,
+    'title': 'aliquid eos sed fuga est maxime repellendus',
+    'body': 'reprehenderit id nostrum\nvoluptas doloremque pariatur sint et accusantium quia quod aspernatur\net fugiat amet\nnon sapiente et consequatur necessitatibus molestiae'
+  },
+  {
+    'userId': 7,
+    'id': 68,
+    'title': 'odio quis facere architecto reiciendis optio',
+    'body': 'magnam molestiae perferendis quisquam\nqui cum reiciendis\nquaerat animi amet hic inventore\nea quia deleniti quidem saepe porro velit'
+  },
+  {
+    'userId': 7,
+    'id': 69,
+    'title': 'fugiat quod pariatur odit minima',
+    'body': 'officiis error culpa consequatur modi asperiores et\ndolorum assumenda voluptas et vel qui aut vel rerum\nvoluptatum quisquam perspiciatis quia rerum consequatur totam quas\nsequi commodi repudiandae asperiores et saepe a'
+  },
+  {
+    'userId': 7,
+    'id': 70,
+    'title': 'voluptatem laborum magni',
+    'body': 'sunt repellendus quae\nest asperiores aut deleniti esse accusamus repellendus quia aut\nquia dolorem unde\neum tempora esse dolore'
+  },
+  {
+    'userId': 8,
+    'id': 71,
+    'title': 'et iusto veniam et illum aut fuga',
+    'body': 'occaecati a doloribus\niste saepe consectetur placeat eum voluptate dolorem et\nqui quo quia voluptas\nrerum ut id enim velit est perferendis'
+  },
+  {
+    'userId': 8,
+    'id': 72,
+    'title': 'sint hic doloribus consequatur eos non id',
+    'body': 'quam occaecati qui deleniti consectetur\nconsequatur aut facere quas exercitationem aliquam hic voluptas\nneque id sunt ut aut accusamus\nsunt consectetur expedita inventore velit'
+  },
+  {
+    'userId': 8,
+    'id': 73,
+    'title': 'consequuntur deleniti eos quia temporibus ab aliquid at',
+    'body': 'voluptatem cumque tenetur consequatur expedita ipsum nemo quia explicabo\naut eum minima consequatur\ntempore cumque quae est et\net in consequuntur voluptatem voluptates aut'
+  },
+  {
+    'userId': 8,
+    'id': 74,
+    'title': 'enim unde ratione doloribus quas enim ut sit sapiente',
+    'body': 'odit qui et et necessitatibus sint veniam\nmollitia amet doloremque molestiae commodi similique magnam et quam\nblanditiis est itaque\nquo et tenetur ratione occaecati molestiae tempora'
+  },
+  {
+    'userId': 8,
+    'id': 75,
+    'title': 'dignissimos eum dolor ut enim et delectus in',
+    'body': 'commodi non non omnis et voluptas sit\nautem aut nobis magnam et sapiente voluptatem\net laborum repellat qui delectus facilis temporibus\nrerum amet et nemo voluptate expedita adipisci error dolorem'
+  },
+  {
+    'userId': 8,
+    'id': 76,
+    'title': 'doloremque officiis ad et non perferendis',
+    'body': 'ut animi facere\ntotam iusto tempore\nmolestiae eum aut et dolorem aperiam\nquaerat recusandae totam odio'
+  },
+  {
+    'userId': 8,
+    'id': 77,
+    'title': 'necessitatibus quasi exercitationem odio',
+    'body': 'modi ut in nulla repudiandae dolorum nostrum eos\naut consequatur omnis\nut incidunt est omnis iste et quam\nvoluptates sapiente aliquam asperiores nobis amet corrupti repudiandae provident'
+  },
+  {
+    'userId': 8,
+    'id': 78,
+    'title': 'quam voluptatibus rerum veritatis',
+    'body': 'nobis facilis odit tempore cupiditate quia\nassumenda doloribus rerum qui ea\nillum et qui totam\naut veniam repellendus'
+  },
+  {
+    'userId': 8,
+    'id': 79,
+    'title': 'pariatur consequatur quia magnam autem omnis non amet',
+    'body': 'libero accusantium et et facere incidunt sit dolorem\nnon excepturi qui quia sed laudantium\nquisquam molestiae ducimus est\nofficiis esse molestiae iste et quos'
+  },
+  {
+    'userId': 8,
+    'id': 80,
+    'title': 'labore in ex et explicabo corporis aut quas',
+    'body': 'ex quod dolorem ea eum iure qui provident amet\nquia qui facere excepturi et repudiandae\nasperiores molestias provident\nminus incidunt vero fugit rerum sint sunt excepturi provident'
+  },
+  {
+    'userId': 9,
+    'id': 81,
+    'title': 'tempora rem veritatis voluptas quo dolores vero',
+    'body': 'facere qui nesciunt est voluptatum voluptatem nisi\nsequi eligendi necessitatibus ea at rerum itaque\nharum non ratione velit laboriosam quis consequuntur\nex officiis minima doloremque voluptas ut aut'
+  },
+  {
+    'userId': 9,
+    'id': 82,
+    'title': 'laudantium voluptate suscipit sunt enim enim',
+    'body': 'ut libero sit aut totam inventore sunt\nporro sint qui sunt molestiae\nconsequatur cupiditate qui iste ducimus adipisci\ndolor enim assumenda soluta laboriosam amet iste delectus hic'
+  },
+  {
+    'userId': 9,
+    'id': 83,
+    'title': 'odit et voluptates doloribus alias odio et',
+    'body': 'est molestiae facilis quis tempora numquam nihil qui\nvoluptate sapiente consequatur est qui\nnecessitatibus autem aut ipsa aperiam modi dolore numquam\nreprehenderit eius rem quibusdam'
+  },
+  {
+    'userId': 9,
+    'id': 84,
+    'title': 'optio ipsam molestias necessitatibus occaecati facilis veritatis dolores aut',
+    'body': 'sint molestiae magni a et quos\neaque et quasi\nut rerum debitis similique veniam\nrecusandae dignissimos dolor incidunt consequatur odio'
+  },
+  {
+    'userId': 9,
+    'id': 85,
+    'title': 'dolore veritatis porro provident adipisci blanditiis et sunt',
+    'body': 'similique sed nisi voluptas iusto omnis\nmollitia et quo\nassumenda suscipit officia magnam sint sed tempora\nenim provident pariatur praesentium atque animi amet ratione'
+  },
+  {
+    'userId': 9,
+    'id': 86,
+    'title': 'placeat quia et porro iste',
+    'body': 'quasi excepturi consequatur iste autem temporibus sed molestiae beatae\net quaerat et esse ut\nvoluptatem occaecati et vel explicabo autem\nasperiores pariatur deserunt optio'
+  },
+  {
+    'userId': 9,
+    'id': 87,
+    'title': 'nostrum quis quasi placeat',
+    'body': 'eos et molestiae\nnesciunt ut a\ndolores perspiciatis repellendus repellat aliquid\nmagnam sint rem ipsum est'
+  },
+  {
+    'userId': 9,
+    'id': 88,
+    'title': 'sapiente omnis fugit eos',
+    'body': 'consequatur omnis est praesentium\nducimus non iste\nneque hic deserunt\nvoluptatibus veniam cum et rerum sed'
+  },
+  {
+    'userId': 9,
+    'id': 89,
+    'title': 'sint soluta et vel magnam aut ut sed qui',
+    'body': 'repellat aut aperiam totam temporibus autem et\narchitecto magnam ut\nconsequatur qui cupiditate rerum quia soluta dignissimos nihil iure\ntempore quas est'
+  },
+  {
+    'userId': 9,
+    'id': 90,
+    'title': 'ad iusto omnis odit dolor voluptatibus',
+    'body': 'minus omnis soluta quia\nqui sed adipisci voluptates illum ipsam voluptatem\neligendi officia ut in\neos soluta similique molestias praesentium blanditiis'
+  },
+  {
+    'userId': 10,
+    'id': 91,
+    'title': 'aut amet sed',
+    'body': 'libero voluptate eveniet aperiam sed\nsunt placeat suscipit molestias\nsimilique fugit nam natus\nexpedita consequatur consequatur dolores quia eos et placeat'
+  },
+  {
+    'userId': 10,
+    'id': 92,
+    'title': 'ratione ex tenetur perferendis',
+    'body': 'aut et excepturi dicta laudantium sint rerum nihil\nlaudantium et at\na neque minima officia et similique libero et\ncommodi voluptate qui'
+  },
+  {
+    'userId': 10,
+    'id': 93,
+    'title': 'beatae soluta recusandae',
+    'body': 'dolorem quibusdam ducimus consequuntur dicta aut quo laboriosam\nvoluptatem quis enim recusandae ut sed sunt\nnostrum est odit totam\nsit error sed sunt eveniet provident qui nulla'
+  },
+  {
+    'userId': 10,
+    'id': 94,
+    'title': 'qui qui voluptates illo iste minima',
+    'body': 'aspernatur expedita soluta quo ab ut similique\nexpedita dolores amet\nsed temporibus distinctio magnam saepe deleniti\nomnis facilis nam ipsum natus sint similique omnis'
+  },
+  {
+    'userId': 10,
+    'id': 95,
+    'title': 'id minus libero illum nam ad officiis',
+    'body': 'earum voluptatem facere provident blanditiis velit laboriosam\npariatur accusamus odio saepe\ncumque dolor qui a dicta ab doloribus consequatur omnis\ncorporis cupiditate eaque assumenda ad nesciunt'
+  },
+  {
+    'userId': 10,
+    'id': 96,
+    'title': 'quaerat velit veniam amet cupiditate aut numquam ut sequi',
+    'body': 'in non odio excepturi sint eum\nlabore voluptates vitae quia qui et\ninventore itaque rerum\nveniam non exercitationem delectus aut'
+  },
+  {
+    'userId': 10,
+    'id': 97,
+    'title': 'quas fugiat ut perspiciatis vero provident',
+    'body': 'eum non blanditiis soluta porro quibusdam voluptas\nvel voluptatem qui placeat dolores qui velit aut\nvel inventore aut cumque culpa explicabo aliquid at\nperspiciatis est et voluptatem dignissimos dolor itaque sit nam'
+  },
+  {
+    'userId': 10,
+    'id': 98,
+    'title': 'laboriosam dolor voluptates',
+    'body': 'doloremque ex facilis sit sint culpa\nsoluta assumenda eligendi non ut eius\nsequi ducimus vel quasi\nveritatis est dolores'
+  },
+  {
+    'userId': 10,
+    'id': 99,
+    'title': 'temporibus sit alias delectus eligendi possimus magni',
+    'body': 'quo deleniti praesentium dicta non quod\naut est molestias\nmolestias et officia quis nihil\nitaque dolorem quia'
+  },
+  {
+    'userId': 10,
+    'id': 100,
+    'title': 'at nam consequatur ea labore ea harum',
+    'body': 'cupiditate quo est a modi nesciunt soluta\nipsa voluptas error itaque dicta in\nautem qui minus magnam et distinctio eum\naccusamus ratione error aut'
+  }
 ];
+
+const categories = ['meteor','product','user-story','other'];
+
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function normalizePosts(posts) {
+  return posts.map(normalizePost);
+}
+
+function getDate(startDate,numberOfDays) {
+  	let returnDate = new Date(
+								startDate.getFullYear(),
+								startDate.getMonth(),
+								startDate.getDate() - numberOfDays,
+								startDate.getHours(),
+								startDate.getMinutes(),
+								startDate.getSeconds());
+		return returnDate;
+}
+
+function normalizePost(post) {
+  let categoryIndex = getRandomInt(0,3);
+  let dateOffset = getRandomInt(0,6);
+
+  let npost = Object.assign({}, post, {
+            likeCount: dateOffset,
+            date: getDate(new Date(),dateOffset),
+            category: categories[categoryIndex]
+          });
+
+  return npost;
+}
+
+
+const PostsList = normalizePosts(RawList);
 
 export default PostsList;
